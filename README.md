@@ -273,7 +273,7 @@ Play's automatic update mechanism. Instead, **Settings → App update** lets
 an existing install update itself in place:
 
 1. Tap **Check for updates**. The app queries the GitHub Releases API
-   (`/repos/LDKTC/App-QuetzaLib/releases/latest`, published by
+   (`/repos/ZYDRAXYL/QuetzaLib-APP/releases/latest`, published by
    `.github/workflows/release.yml`) and compares its `tag_name` against
    the running app's version (`PackageInfo`/`pubspec.yaml`).
 2. If a newer release has an `.apk` asset attached, tap **Download &

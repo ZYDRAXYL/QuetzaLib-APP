@@ -17,7 +17,7 @@ class UpdateService {
   UpdateService({http.Client? client}) : _client = client ?? http.Client();
 
   static const _releasesUrl =
-      'https://api.github.com/repos/LDKTC/App-QuetzaLib/releases/latest';
+      'https://api.github.com/repos/ZYDRAXYL/QuetzaLib-APP/releases/latest';
 
   final http.Client _client;
 
