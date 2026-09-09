@@ -5,7 +5,7 @@ description: Auto-generate and keep project documentation in sync with the code 
 
 # write-docs — sync docs/SYSTEMS.md, docs/FILES.md, docs/CHANGELOG.md with the code
 
-Paths below are relative to the repo root (`App-QuetzaLib/`), not to this
+Paths below are relative to the repo root (`QuetzaLib-APP/`), not to this
 skill directory.
 
 This skill maintains three files:

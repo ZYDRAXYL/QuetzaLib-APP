@@ -87,7 +87,7 @@ doesn't need it yet.
    `.github/workflows/release.yml`, and confirm the release afterward:
 
    ```bash
-   curl -s https://api.github.com/repos/LDKTC/App-QuetzaLib/releases/latest
+   curl -s https://api.github.com/repos/ZYDRAXYL/QuetzaLib-APP/releases/latest
    ```
 
    One asset is expected: `quetzalib-v<version>.apk`.
