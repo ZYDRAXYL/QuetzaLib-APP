@@ -11,6 +11,10 @@ library stored entirely on-device in SQLite. Primary target is Android
 builds as an installable web PWA. There is no backend — every feature is
 local-first except the metadata-lookup and update-check network calls.
 
+This repo is also the **hub** of QuetzaLib's six-repository architecture —
+see "Multi-repository architecture" below before creating a file, moving
+code between repos, or answering "where does this live".
+
 ## Commands
 
 ```bash
@@ -209,7 +213,15 @@ android/                 native Android project (MainActivity.kt, keystore/signi
 web/                     PWA shell (index.html, manifest.json, icons)
 test/                    mirrors lib/'s directory shape
 .claude/skills/          project-specific Claude Code skills (see below)
+.claude/agents/          subagents, incl. the two chain agents
+chain/                   chain.json (the multi-repo contract) + its write-up
+tools/                   chain tooling: chain-lib / chain-survey /
+                         chain-propagate / mirror-claude (Node, no deps)
 ```
+
+`chain/` and `tools/` are the hub's files, not the app's — they are
+mirrored out to the other repos and have nothing to do with the Flutter
+build. See "Multi-repository architecture" below.
 
 ### File-size guidance
 
@@ -233,6 +245,52 @@ example), not `foo_bar_baz.dart` siblings dumped into `services/`.
   rendered text. This is the closest thing to a UI driver in this repo —
   extend it rather than building a separate integration-test harness.
 
+## Multi-repository architecture
+
+QuetzaLib is split across six repositories, and **this one is the hub** —
+it owns `.claude/` (the source of every chain skill), `chain/`, `tools/`,
+and `docs/`, *as well as* the Flutter app.
+
+| Repo | Owns | Releases |
+|---|---|---|
+| **APP** (here) | the app + the hub: `.claude/`, `chain/`, `tools/`, `docs/` | `v*` |
+| **SDB** | `schema/`, `backup-format/` — the published schema snapshot | `sdb-v*` |
+| **EXE** | `electron/` — the Windows desktop shell | `exe-v*` |
+| **PWA** | the installable browser build | — |
+| **WEB** | the website, its Docs pages, the release mirror | mirror |
+| **DEV** | the multi-root workspace + setup scripts (private, outside the chain) | — |
+
+`chain/chain.json` is the machine-readable contract — read it rather than
+this table where the two disagree. `chain/README.md` is the full write-up.
+
+```bash
+node tools/chain-lib.mjs           # this repo's resolved place in the chain
+node tools/chain-survey.mjs        # what moved in the other repos
+node tools/mirror-claude.mjs       # push .claude/ + chain/ + tools/ downstream
+node tools/mirror-claude.mjs --check   # verify only (what CI runs)
+node tools/chain-propagate.mjs --dry-run
+```
+
+Three things to know before touching any of it:
+
+1. **APP must stay the root of the graph.** It is safe for one repo to be
+   both hub and app only because nothing points *at* it. `node
+   tools/chain-lib.mjs` must print `upstream —` here, and
+   `.github/workflows/chain-check.yml` fails the build if an edge into APP
+   ever appears. This is also why SDB is *downstream* of APP: the schema
+   is authored in `lib/services/database_service.dart`, so the app is its
+   source and SDB publishes a snapshot.
+2. **Never edit a mirrored file at its destination.** Every `.claude/`,
+   `chain/`, and `tools/chain-*.mjs` file in SDB/EXE/PWA/WEB is generated
+   from here and stamped "do not edit here". Edit it here, re-run the
+   mirror.
+3. **`lib/` is one source tree for Android, web, and desktop.** PWA and
+   EXE are build targets, not forks — never copy Dart source into them.
+
+Only the `claude-tooling` edge is implemented today; the other handlers in
+`tools/chain-propagate.mjs` report that their payload is not built yet and
+skip, rather than writing an empty change.
+
 ## Project-specific Claude Code skills (`.claude/skills/`)
 
 This repo ships its own skills — prefer them over ad hoc approaches for
@@ -242,6 +300,15 @@ whether/how to split a file), `quetzalib-l10n-style` (en/th key parity +
 hardcoded-string check), `run-quetzalib` (how to run/test/verify given
 this environment's actual capabilities), `write-docs` (keep `docs/`
 in sync, if present).
+
+Three more are the **chain** skills, and unlike the ones above they are
+mirrored into the other repos: `multi-repository-architecture` (which repo
+owns what), `chained-supporter` (run *before* work — what moved elsewhere),
+and `chained-updated` (run *after* work lands — push it downstream). They
+have matching agents in `.claude/agents/`. `MIRROR_SETS` in
+`tools/mirror-claude.mjs` is what decides which repo receives which skill;
+the Flutter-shaped skills stay APP-only because no other repo has a
+`pubspec.yaml` for them to act on.
 
 ## Notable constraints
 

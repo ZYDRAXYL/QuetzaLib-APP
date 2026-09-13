@@ -1,0 +1,79 @@
+name: Chain check
+
+# APP owns .claude/ and chain/chain.json; every other chain repo carries a
+# mirror. A mirror is only trustworthy if it is actually regenerated after an
+# edit here, so this guards the things that would otherwise reach four repos at
+# once.
+#
+# It cannot verify the OTHER repos' checkouts from here — a workflow's
+# GITHUB_TOKEN is scoped to its own repo. What it does verify is that
+# chain.json is well-formed, that every skill the mirror sets name exists, and
+# that the graph is still acyclic and still rooted at APP.
+
+on:
+  push:
+    branches: [main]
+    paths: ['.claude/**', 'chain/**', 'tools/**', '.github/workflows/chain-check.yml']
+  pull_request:
+    paths: ['.claude/**', 'chain/**', 'tools/**', '.github/workflows/chain-check.yml']
+  workflow_dispatch: {}
+
+permissions:
+  contents: read
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version: 22
+
+      - name: chain.json parses and resolves
+        run: node tools/chain-lib.mjs
+
+      # The mirror tool throws if a MIRROR_SETS entry names a skill that does
+      # not exist. Checking the names directly exercises that validation
+      # without needing the sibling repos present.
+      - name: Every mirrored skill exists
+        run: |
+          node -e "
+            const { readFileSync, existsSync } = require('node:fs');
+            const src = readFileSync('tools/mirror-claude.mjs', 'utf8');
+            const entries = [...src.matchAll(/'((?:skills|agents)\/[^']+)'/g)].map(m => m[1]);
+            let bad = 0;
+            for (const e of new Set(entries)) {
+              if (!existsSync('.claude/' + e)) { console.error('::error::mirror set names .claude/' + e + ', which does not exist'); bad++; }
+            }
+            if (bad) process.exit(1);
+            console.log('all ' + new Set(entries).size + ' mirrored entries exist');
+          "
+
+      # APP is both the hub and the application repo, which is only safe while
+      # it is the root of the graph. An incoming edge would make the chain
+      # cyclic and propagation would loop forever.
+      - name: The chain graph is acyclic and rooted at APP
+        run: |
+          node -e "
+            const c = JSON.parse(require('node:fs').readFileSync('chain/chain.json','utf8'));
+            const incomingToApp = c.edges.filter(e => e.to === 'APP');
+            if (incomingToApp.length) {
+              console.error('::error::' + incomingToApp.length + ' edge(s) point at APP (' +
+                incomingToApp.map(e => e.from + '->APP').join(', ') +
+                '). APP is the hub AND the app repo, so it must stay the root of the graph.');
+              process.exit(1);
+            }
+            const adj = {};
+            for (const e of c.edges) (adj[e.from] ||= []).push(e.to);
+            const state = {};
+            const walk = n => {
+              if (state[n] === 1) { console.error('::error::cycle in chain.json at ' + n + ' — propagation would loop forever'); process.exit(1); }
+              if (state[n] === 2) return;
+              state[n] = 1;
+              for (const m of adj[n] || []) walk(m);
+              state[n] = 2;
+            };
+            for (const n of Object.keys(c.repos)) walk(n);
+            console.log('chain is acyclic across ' + Object.keys(c.repos).length + ' repos, ' + c.edges.length + ' edges, rooted at APP');
+          "
