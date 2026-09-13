@@ -1,0 +1,74 @@
+{
+  "chainVersion": "1.0.0",
+  "org": "ZYDRAXYL",
+  "self": "APP",
+  "branch": "claude/quetzalib-multi-repo-architecture-2sh1qs",
+  "repos": {
+    "APP": {
+      "repo": "QuetzaLib-APP",
+      "role": "hub+app",
+      "private": false,
+      "owns": [".claude/", "chain/", "tools/", "docs/", "lib/", "android/", "web/", "test/", "pubspec.yaml"],
+      "releases": "v*",
+      "versionSource": "pubspec.yaml#version"
+    },
+    "SDB": {
+      "repo": "QuetzaLib-SDB",
+      "role": "schema",
+      "private": false,
+      "owns": ["schema/", "backup-format/"],
+      "releases": "sdb-v*",
+      "versionSource": "schema/version.json#schemaVersion"
+    },
+    "EXE": {
+      "repo": "QuetzaLib-EXE",
+      "role": "app",
+      "private": false,
+      "owns": ["electron/"],
+      "releases": "exe-v*",
+      "versionSource": "electron/package.json#version"
+    },
+    "PWA": {
+      "repo": "QuetzaLib-PWA",
+      "role": "build",
+      "private": false,
+      "owns": ["tools/", "shim/", "dist/"],
+      "releases": null,
+      "versionSource": "package.json#version"
+    },
+    "WEB": {
+      "repo": "QuetzaLib-WEB",
+      "role": "site",
+      "private": false,
+      "owns": ["*.html", "assets/"],
+      "releases": "mirror",
+      "versionSource": null
+    }
+  },
+  "chains": {
+    "android": ["APP", "WEB"],
+    "desktop": ["APP", "EXE", "WEB"],
+    "browser": ["APP", "PWA", "WEB"],
+    "schema": ["APP", "SDB", "WEB"]
+  },
+  "edges": [
+    { "from": "APP", "to": "SDB", "carries": "claude-tooling" },
+    { "from": "APP", "to": "EXE", "carries": "claude-tooling" },
+    { "from": "APP", "to": "PWA", "carries": "claude-tooling" },
+    { "from": "APP", "to": "WEB", "carries": "claude-tooling" },
+    { "from": "APP", "to": "SDB", "carries": "generated-schema" },
+    { "from": "APP", "to": "EXE", "carries": "app-source" },
+    { "from": "APP", "to": "PWA", "carries": "app-source" },
+    { "from": "APP", "to": "WEB", "carries": "release-mirror" },
+    { "from": "EXE", "to": "WEB", "carries": "release-mirror" },
+    { "from": "PWA", "to": "WEB", "carries": "app-source" },
+    { "from": "SDB", "to": "WEB", "carries": "schema-docs" }
+  ],
+  "propagation": {
+    "mode": "pull-request",
+    "label": "chained-update",
+    "tokenSecret": "CHAIN_TOKEN",
+    "trailerPrefix": "Chained-From",
+    "syncState": "chain/.chain-sync.json"
+  }
+}
