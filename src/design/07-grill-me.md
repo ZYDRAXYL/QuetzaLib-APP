@@ -1,13 +1,13 @@
 # 07 — Grill-me: คำถามที่เจ้าของต้องตัดสิน (QuetzaLib PC + Eco)
 
-14 ข้อ · จัดเป็นรอบ: รอบ 1 ตอบได้ทันที · รอบถัดไปขึ้นกับคำตอบก่อนหน้า · ➡️ = คำตอบที่แนะนำ
+16 ข้อ (Q1 ตอบแล้ว · Q10 ตกไป) · จัดเป็นรอบ: รอบ 1 ตอบได้ทันที · รอบถัดไปขึ้นกับคำตอบก่อนหน้า · ➡️ = คำตอบที่แนะนำ
 คำถามระดับ Eco ทั้งหมด (repo สัญญา, `.zeco`, token, สิทธิ์ Z.I.Z) อยู่ที่ `ECO-CONTRACT.md` §16 (และ `GRILL-ME.md` ระดับ Eco เมื่อเขียนเสร็จ) — ไม่ถามซ้ำที่นี่
 
 ---
 
 ## รอบ 1 — ไม่มีคำถามอื่นต้องตอบก่อน
 
-❓ **Q1** - **QuetzaLib PC สร้างด้วยอะไร**: แผนเดิมใน `chain.json` คือ QuetzaLib-EXE = Electron ห่อ `flutter build web`
+✅ **Q1** — **ตอบแล้ว 2026-11-03: (ข) Electron แบบ DraconDex-EXE + UI สไตล์ DraconDex** → [02 §0](./02-architecture.md) · คำถามเดิม: **QuetzaLib PC สร้างด้วยอะไร**: แผนเดิมใน `chain.json` คือ QuetzaLib-EXE = Electron ห่อ `flutter build web`
 แต่ทางนั้น DB อยู่ใน IndexedDB ของ Chromium (ไม่เป็นไฟล์ — MCP/locator/สำรองข้อมูลต้องมีสะพาน) ·
 (ก) **Flutter Windows desktop จาก `lib/` เดิม** — DB/รูปเป็นไฟล์, ใช้โค้ด `_io` ที่มีแล้ว, ~25–40 MB, ตรงกฎ "source tree เดียว"; เสียกล้องใน Chromium และตาราง/แผงต้องเขียนเองใน Flutter ·
 (ข) Electron ตามแผนเดิม — ได้ installer pipeline แบบ DraconDex-EXE และกล้องใน Chromium; DB มองไม่เห็น, 100 MB+, repo ที่สอง ·
@@ -93,7 +93,7 @@
 
 ## รอบ 2 — ขึ้นกับรอบ 1
 
-❓ **Q10** - **ชะตาของ repo QuetzaLib-EXE** (ขึ้นกับ Q1 = ก): (ก) **ถอดออกจาก chain** — ลบ repo entry + 3 edges, `desktop` chain = `APP > WEB`, ถอดจาก `MIRROR_SETS`, แก้ `CLAUDE.md`/`chain/README.md`/DEV scripts ·
+⛔ **Q10** — **ตกไป** (Q1 = ข: EXE คงอยู่ใน chain เป็นที่อยู่ของ `electron/`) · คำถามเดิม: **ชะตาของ repo QuetzaLib-EXE** (ขึ้นกับ Q1 = ก): (ก) **ถอดออกจาก chain** — ลบ repo entry + 3 edges, `desktop` chain = `APP > WEB`, ถอดจาก `MIRROR_SETS`, แก้ `CLAUDE.md`/`chain/README.md`/DEV scripts ·
 (ข) เก็บเป็น repo แพ็กเกจ (รับ build จาก APP แล้วทำ installer) — มีสองขบวน tag (`v*` กับ `exe-v*`) ที่ต้องตรงกัน ·
 (ค) เก็บชื่อไว้เฉย ๆ ไม่มีงาน — chain มี repo ผีที่ `chained-updated` จะพยายามส่ง PR ไปหา
 
@@ -127,6 +127,20 @@
 
 ---
 
+## รอบ 2b — เกิดจาก Q1 = ข (Electron)
+
+❓ **Q15** - **DB บน PC เป็นไฟล์จริงแบบ DraconDex หรือไม่**: DraconDex เปิด SQLite (`node-sqlite3-wasm`) ใน main process เป็นไฟล์จริง ·
+QuetzaLib web build เก็บ SQLite ใน IndexedDB ของ Chromium ·
+(ก) **MVP = IndexedDB ตามที่ web build ทำอยู่** (ไม่แก้ Dart เลย) · สำรอง/ย้ายเครื่องผ่าน `.zip`/`.zeco` เหมือนเดิม ·
+(ข) สะพาน: `databaseFactory` ตัวใหม่ใน `lib/` ที่ส่ง SQL ผ่าน `postMessage` → main process → ไฟล์ `%LOCALAPPDATA%\QuetzaLib\library\quetzalib.db` (Q4) — ได้ไฟล์จริง, ต้องเขียน factory + เทสต์
+➡️ (ก) ก่อน แล้ว (ข) เมื่อทำ MCP (Q16) เพราะ MCP ต้องอ่าน DB จากนอก renderer
+
+❓ **Q16** - **MCP ของ QuetzaLib อยู่ตรงไหนเมื่อเป็น Electron**: (ก) **main process ของ Electron เป็น pipe server** (Node `net.createServer` บน `\\.\pipe\…` — ไม่ต้องมี C++) แล้วส่งงานให้ Flutter ผ่าน IPC/`postMessage` ·
+(ข) ทำหลัง Q15 (ข) ให้ main process อ่าน DB เอง ไม่ผ่าน Flutter
+➡️ (ก) สำหรับคำสั่งที่ต้องให้ผู้ใช้ยืนยัน (proposal) · (ข) สำหรับคำสั่งอ่านอย่างเดียว
+
+---
+
 ## รอบ 3 — ขึ้นกับรอบ 2
 
 ❓ **Q14** - **ซื้อใบรับรอง code signing ไหม** (ขึ้นกับ Q11): .exe ที่ไม่เซ็นโดน SmartScreen เตือน "unknown publisher" ตอนติดตั้ง/เปิดครั้งแรก ·
@@ -143,7 +157,7 @@
 
 | Q# | หัวข้อ | ขึ้นกับ | กระทบเอกสาร |
 |---|---|---|---|
-| Q1 | สร้าง PC ด้วย Flutter Windows หรือ Electron | — | 02 §1–§5, 05 ทั้งไฟล์ |
+| Q1 ✅ | สร้าง PC ด้วย Flutter Windows หรือ Electron → **Electron** | — | 02 §0 |
 | Q2 | PC เท่ามือถือหรือเป็นโต๊ะทำงาน | — | 03 §1, §3 |
 | Q3 | ย้ายข้อมูลมือถือ ↔ PC + `.zeco` แทน `.zip` | — | 04 §2, §5 · 03 F40–F43, F51 |
 | Q4 | ที่เก็บคลังบน Windows | — | 04 §1 · 06 §3 |
@@ -152,8 +166,10 @@
 | Q7 | สแกนเนอร์ USB / webcam / มือถือ | — | 02 §3 · 03 F30–F36 · 05 §4 |
 | Q8 | OCR บน PC | — | 02 §3 · 03 F5, F55 |
 | Q9 | Z.I.Z อ่านอะไรได้ · ลบได้ไหม | — | 06 §2.1, §2.4 · 05 §7 F-C |
-| Q10 | ชะตา QuetzaLib-EXE | Q1 | 02 §6 · `chain/`, `CLAUDE.md`, QuetzaLib-DEV |
+| Q10 ⛔ | ชะตา QuetzaLib-EXE → คงไว้ | Q1 | 02 §0 |
 | Q11 | tag + ชนิด installer | Q1, Q10 | 02 §7 · `.github/workflows/release.yml` |
 | Q12 | accent + จุดสีประจำแอป | Q6 | 05 §6 · 06 §8 P7 |
 | Q13 | ขอบเขต bulk edit ใน MVP | Q2 | 03 §2 · 05 §5 |
 | Q14 | code signing | Q11 | 02 §7 |
+| Q15 | DB ไฟล์จริงแบบ DraconDex หรือ IndexedDB | Q1 | 02 §0 · 04 §1 |
+| Q16 | MCP ฝั่ง Electron | Q1, Q15 | 02 §0 · 06 |
