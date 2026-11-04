@@ -60,6 +60,14 @@ flutter:
   uses-material-design: true
   assets:
     - assets/icon/
+    - assets/fonts/NotoSansThai-OFL.txt
+  # web/desktop (Electron): Flutter web otherwise downloads its Thai fallback
+  # font from fonts.gstatic.com, so Thai text vanishes offline. Used only when
+  # kIsWeb (see buildAppTheme).
+  fonts:
+    - family: NotoSansThai
+      fonts:
+        - asset: assets/fonts/NotoSansThai.ttf
 
 flutter_launcher_icons:
   android: true
