@@ -1,6 +1,34 @@
 # 02 — สถาปัตยกรรม
 
-## 1. Stack — Flutter Windows desktop จาก `lib/` เดิม
+## 0. คำตัดสินของเจ้าของ (2026-11-03) — Electron แบบ DraconDex
+
+> **มีผลเหนือ §1, §1.1, §2 และ §6 ด้านล่าง** (เก็บไว้เป็นประวัติว่าทำไมเคยเสนอ Flutter Windows)
+
+Grill **Q1 = (ข)**: QuetzaLib PC = **Electron ห่อ `flutter build web`** ใน repo **QuetzaLib-EXE** (`electron/`)
+โครงและหน้าตาตาม DraconDex-EXE
+
+| เรื่อง | ทำแบบนี้ | ที่มาใน DraconDex-EXE |
+|---|---|---|
+| หน้าต่าง | `BrowserWindow` `frame:false` · จำขนาด/ตำแหน่ง/ขยายเต็ม · single-instance lock | `electron/main.js` `createWindow()` |
+| แถบชื่อ | แถบ 38px ของเราเอง: โลโก้ · ชื่อแอป + จุดสี accent · พื้นที่ลาก · ปุ่ม `- ▢ x` (ปิด = hover แดง) | `css/titlebar.css` `#title-tab-bar` `#window-controls` |
+| สี | token ชุดเดียวกับ DraconDex (`--bg --surface --raised --hover --border --t1..t3 --danger`) · midnight/daylight ตามระบบ · ต่างแค่ accent มรกต (ECO-T2) | `css/tokens.css` · `css/themes.css` |
+| IPC | `window:minimize` / `window:toggleMaximize` / `window:close` ชื่อเดียวกัน · preload ให้เฉพาะแถบชื่อ | `main.js` · `preload.js` |
+| ตัวแอป | `<iframe src="app://web/">` = Flutter web build — **ไม่มีโค้ด Dart ใน EXE** (กฎ source tree เดียว) | — (DraconDex เป็น vanilla JS ทั้งก้อน) |
+| origin | scheme `app://` แบบ privileged (`standard`, `secure`, `allowServiceWorkers`) — service worker ของ `sqflite_common_ffi_web` และ IndexedDB ใช้บน `file://` ไม่ได้ | — |
+| สิทธิ์ | อนุญาตแค่กล้อง (`media`) ให้ `app://web/` — สแกน ISBN ใน Chromium ได้อีก | — |
+| ลิงก์ | http(s) เปิดในเบราว์เซอร์ระบบ · ห้าม navigate ออกนอก `app://` | — |
+| build | `npm run build:exe` (portable) · `build:installer` (NSIS) · CI `build-electron.yml` ดึง APP → `flutter build web` → ใส่ `electron/web/` | `package.json#build` · `build-electron.yml` |
+| release | tag `exe-v*` จาก `electron/package.json#version` (chain เดิม) | — |
+
+**ราคาที่ยอมจ่าย** (จาก §1.1): DB อยู่ใน IndexedDB ไม่เป็นไฟล์ · ~100 MB+ · repo ที่สอง
+
+**สิ่งที่ตกไปเพราะคำตัดสินนี้:** `windows/` runner C++, `WM_DROPFILES`, named pipe ใน C++, Q10 (ถอด EXE ออกจาก chain)
+
+**คำถามใหม่ที่เกิดขึ้น** → [Grill Q15](./07-grill-me.md) (DB ไฟล์จริงแบบ DraconDex) · [Q16](./07-grill-me.md) (MCP ฝั่ง Electron)
+
+---
+
+## 1. Stack — Flutter Windows desktop จาก `lib/` เดิม (⛔ ถูกแทนด้วย §0)
 
 | ชั้น | ของ | หมายเหตุ |
 |---|---|---|
@@ -21,7 +49,7 @@
 | ขนาด | 100 MB+ `[K]` | 25–40 MB `[K]` |
 | สิ่งที่เสีย | — | กล้องใน Chromium (`getUserMedia` + `BarcodeDetector`) ทำได้ง่ายกว่า · ตาราง/แผงย่อขยายเขียนง่ายกว่าใน web |
 
-ที่มา: `Zydraxyl-HUB/Design/eco/research/T1-C-structure.md` §3.3, `T3-C-internals.md` §3.1 · ❓ รอเจ้าของตัดสิน → Grill Q1
+ที่มา: `Zydraxyl-HUB/Design/eco/research/T1-C-structure.md` §3.3, `T3-C-internals.md` §3.1 · ✅ เจ้าของเลือก Electron → §0
 
 ---
 

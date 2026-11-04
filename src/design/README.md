@@ -1,6 +1,6 @@
 # QuetzaLib PC + Eco — เอกสารออกแบบ
 
-> **สถานะ: ออกแบบ ยังไม่สร้าง** · ร่าง 2026-10-18 · ยังไม่มีข้อไหนถูกรับ
+> **สถานะ: ออกแบบ ยังไม่สร้าง** · ร่าง 2026-10-18 · รับแล้ว: Q1 = Electron (2026-11-03)
 > ทุกข้อที่มี **❓ รอเจ้าของตัดสิน → Grill Q<n>** ดูคำถามที่ [`07-grill-me.md`](./07-grill-me.md)
 
 QuetzaLib คือคลังหนังสือ/นิยายส่วนตัว (สแกน ISBN → ค้นข้อมูล → เก็บใน SQLite บนเครื่อง + ไทม์ไลน์สถานะการอ่าน)
@@ -12,8 +12,8 @@ Eco v1 รองรับ PC เท่านั้น (ข้อกำหนด�
 
 | เรื่อง | ข้อเสนอ | เอกสาร |
 |---|---|---|
-| เครื่องยนต์ PC | **Flutter Windows desktop จาก `lib/` เดิม** — ไม่ใช่ Electron ห่อ web build | [02](./02-architecture.md) §1 |
-| QuetzaLib-EXE | ถอดออกจาก chain (`desktop` chain = `APP > WEB`) — ❓ Q10 | [02](./02-architecture.md) §6 |
+| เครื่องยนต์ PC | ✅ **Electron ห่อ `flutter build web`** แบบ DraconDex-EXE + กรอบหน้าต่าง/แถบชื่อสไตล์ DraconDex (เจ้าของตัดสิน 2026-11-03, Q1 = ข) | [02](./02-architecture.md) §0 |
+| QuetzaLib-EXE | ✅ คงไว้ใน chain (`APP > EXE > WEB`) — เป็นที่อยู่ของ `electron/` · Q10 ตกไป | [02](./02-architecture.md) §0 |
 | plugin ที่พังบน Windows | สแกนกล้อง → USB scanner (keyboard-wedge) + พิมพ์เอง · ML Kit OCR → Cloud Vision เท่านั้น · ตัวอัปเดต APK → Hub/WEB | [02](./02-architecture.md) §3 |
 | ที่เก็บคลัง | `%LOCALAPPDATA%\QuetzaLib\library\` (DB + รูป) — ❓ Q4 | [04](./04-internals.md) §1 |
 | มือถือ ↔ PC | `.zeco` (`qzl.library`) นำเข้าแบบ **รวม** ตาม `eid` · `.zip` เดิมอ่านได้ต่อ — ❓ Q3 | [04](./04-internals.md) §5 |
