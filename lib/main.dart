@@ -1,4 +1,6 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:provider/provider.dart';
 
@@ -8,6 +10,12 @@ import 'state/library_provider.dart';
 import 'theme.dart';
 
 void main() {
+  LicenseRegistry.addLicense(() async* {
+    yield LicenseEntryWithLineBreaks(
+      const ['Noto Sans Thai'],
+      await rootBundle.loadString('assets/fonts/NotoSansThai-OFL.txt'),
+    );
+  });
   runApp(const QuetzaLibApp());
 }
 

@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 
 /// QuetzaLib's brand seed: the emerald green of the quetzal in the app
@@ -420,6 +421,11 @@ TextTheme _buildTextTheme(ColorScheme colorScheme) {
       .apply(
         bodyColor: colorScheme.onSurface,
         displayColor: colorScheme.onSurface,
+        // The web build has no system Thai font; without a bundled fallback
+        // it fetches Noto Sans Thai from a CDN and Thai disappears offline.
+        // Set here, not on ThemeData, because the app bar and button themes
+        // below take their styles straight from this text theme.
+        fontFamilyFallback: kIsWeb ? const ['NotoSansThai'] : null,
       );
   return base.copyWith(
     headlineSmall: base.headlineSmall?.copyWith(
